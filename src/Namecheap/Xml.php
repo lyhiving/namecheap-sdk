@@ -17,7 +17,7 @@ class Xml {
      */
     public function convert(\SimpleXMLElement $xml)
     {
-        return json_encode($this->asArray($xml));
+        return $this->asArray($xml);
     }
     /**
      * Convert from SimpleXMLElement to PHP array

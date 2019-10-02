@@ -143,9 +143,13 @@ class Api {
     	}
         
         if ($this->returnType === 'json') {
-        	return json_encode(Xml::convert($xmlData));
-        } else if ($this->returnType === 'array') {
-        	return Xml::convert($xmlData);
+			$xml = new \SimpleXMLElement($xmlData);
+			$converter = new Xml();
+			return json_encode($converter->convert($xml));
+        } else if ($this->returnType === 'array') { 
+			$xml = new \SimpleXMLElement($xmlData);
+			$converter = new Xml();
+			return $converter->convert($xml);
         }
         return $xmlData;
 	}
