@@ -1,13 +1,13 @@
 {
-    "name": "naturalbuild/namecheap-sdk",
-    "description": "SDK library for Namecheap APIs",
+    "name": "lyhiving/namecheap-sdk",
+    "description": "SDK library for Namecheap APIs Base on Saddam Hossain SDK",
     "type": "library",
     "license": "MIT",
     "keywords": ["Namecheap", "api", "namecheap SDK", "namecheap php"],
     "authors": [
         {
-            "name": "Saddam Hossain",
-            "email": "saddamrhossain@gmail.com"
+            "name": "lyhiving",
+            "email": "lyhiving@gmail.com"
         }
     ],
     "autoload": {
