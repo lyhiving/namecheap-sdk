@@ -4,137 +4,80 @@ use DOMDocument;
 use Exception;
 
 /**
- * @Usage : $arr = Xml::createArray($xml);
+ * @Usage : $arr = Xml::convert($xml);
  */
 
 class Xml {
-    private static $xml = null;
-    private static $encoding = 'UTF-8';
-
-    /**
-     * Initialize the root XML node [optional].
+     /**
+     * Convert from SimpleXMLElement to json string
      *
-     * @param $version
-     * @param $encoding
-     * @param $format_output
+     * @param \SimpleXMLElement $xml XML element
+     *
+     * @return string
      */
-    public static function init($version = '1.0', $encoding = 'UTF-8', $format_output = true)
+    public function convert(\SimpleXMLElement $xml)
     {
-        self::$xml = new DOMDocument($version, $encoding);
-        self::$xml->formatOutput = $format_output;
-        self::$encoding = $encoding;
+        return json_encode($this->asArray($xml));
     }
     /**
-     * Convert an XML string or DOMDocument to an Array.
+     * Convert from SimpleXMLElement to PHP array
      *
-     * @param $input_xml string|DOMDocument
-     *
-     * @throws Exception
+     * @param \SimpleXMLElement $xml XML element
      *
      * @return array
      */
-    public static function &createArray($input_xml)
+    public function asArray(\SimpleXMLElement $xml)
     {
-        $xml = self::getXMLRoot();
-        if (is_string($input_xml)) {
-            $parsed = $xml->loadXML($input_xml);
-            if (!$parsed) {
-                throw new Exception('[XML2Array] Error parsing the XML string.');
+        return array($xml->getName() => $this->getData($xml));
+    }
+    /**
+     * Get the XML data
+     *
+     * Returns an array of the XML data. If the XML data is just a single value it will return a string instead.
+     *
+     * @param \SimpleXMLElement $xml XML element
+     *
+     * @return array|string
+     */
+    private function getData(\SimpleXMLElement $xml)
+    {
+        $data = array();
+        // loop through the attributes and append them to the data array with '-' prefix on keys
+        foreach ($xml->attributes() as $key => $value) {
+            $data['-' . $key] = (string)$value;
+        }
+        if ($xml->count() > 0) {
+            $children = $xml->children();
+            // loop through the children
+            foreach ($children as $key => $child) {
+                $childData = $this->getData($child);
+                // decide how to put this into the data array, if the key exists it becomes an array of values
+                if (isset($data[$key])) {
+                    if (is_array($data[$key])) {
+                        $data[$key][] = $childData;
+                    } else {
+                        $data[$key] = array($data[$key], $childData);
+                    }
+                } else {
+                    $data[$key] = array($childData);
+                }
+            }
+            foreach ($data as $key => $value) {
+                if (is_array($value) && count($value) === 1) {
+                    $data[$key] = $value[0];
+                }
             }
         } else {
-            if (!$input_xml instanceof DOMDocument) {
-                throw new Exception('[XML2Array] The input XML object should be of type: DOMDocument.');
+            // get the string value of the XML
+            $value = (string)$xml;
+            // check if this is just a single value element, i.e. <Element>Value</Element>
+            if (count($data) === 0) {
+                $data = $value;
+            } elseif (strlen((string) $xml)) {
+                $data['#text'] = (string)$xml;
             }
-            $xml = self::$xml = $input_xml;
         }
-        $array[$xml->documentElement->tagName] = self::convert($xml->documentElement);
-        self::$xml = null;    // clear the xml node in the class for 2nd time use.
-        return $array;
-    }
-
-    /**
-     * Convert an Array to XML.
-     *
-     * @param mixed $node - XML as a string or as an object of DOMDocument
-     *
-     * @return mixed
-     */
-    private static function &convert($node)
-    {
-        $output = [];
-        switch ($node->nodeType) {
-            case XML_CDATA_SECTION_NODE:
-                $output = trim($node->textContent);
-                break;
-            case XML_TEXT_NODE:
-                $output = trim($node->textContent);
-                break;
-            case XML_ELEMENT_NODE:
-                // for each child node, call the covert function recursively
-                for ($i = 0, $m = $node->childNodes->length; $i < $m; $i++) {
-                    $child = $node->childNodes->item($i);
-                    $v = self::convert($child);
-                    if (isset($child->tagName)) {
-                        $t = $child->tagName;
-                        // assume more nodes of same kind are coming
-                        if (!isset($output[$t])) {
-                            $output[$t] = [];
-                        }
-                        $output[$t][] = $v;
-                    } else {
-                        //check if it is not an empty text node
-                        if ($v !== '') {
-                            $output = $v;
-                        }
-                    }
-                }
-                if (is_array($output)) {
-                    // if only one node of its kind, assign it directly instead if array($value);
-                    foreach ($output as $t => $v) {
-                        if (is_array($v) && count($v) == 1) {
-                            $output[$t] = $v[0];
-                        }
-                    }
-                    if (empty($output)) {
-                        //for empty nodes
-                        $output = '';
-                    }
-                }
-                // loop through the attributes and collect them
-                if ($node->attributes->length) {
-                    $a = [];
-                    foreach ($node->attributes as $attrName => $attrNode) {
-                        $a[$attrName] = (string) $attrNode->value;
-                    }
-                    // if its an leaf node, store the value in @value instead of directly storing it.
-                    if (!is_array($output) && !empty($output)) {
-                        $output = ['__text' => $output];
-                        if (count($a)) {
-                            foreach ($a as $kk => $vv) {
-                                $output['_'.$kk] = $vv;
-                            }
-                        }
-                    } else {
-                        foreach ($a as $k => $v) {
-                            $output['_'.$k] = $v;       
-                        }
-                    }
-                }
-                break;
-        }
-        return $output;
-    }
-    /**
-     * Get the root XML node, if there isn't one, create it.
-     *
-     * @return DOMDocument
-     */
-    private static function getXMLRoot()
-    {
-        if (empty(self::$xml)) {
-            self::init();
-        }
-        return self::$xml;
+        return $data;
     }
 }
 

@@ -143,9 +143,9 @@ class Api {
     	}
         
         if ($this->returnType === 'json') {
-        	return json_encode(Xml::createArray($xmlData));
+        	return json_encode(Xml::convert($xmlData));
         } else if ($this->returnType === 'array') {
-        	return Xml::createArray($xmlData);
+        	return Xml::convert($xmlData);
         }
         return $xmlData;
 	}
