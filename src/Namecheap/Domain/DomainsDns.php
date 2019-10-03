@@ -85,7 +85,7 @@ class DomainsDns extends Api {
 		$data = ['DomainName' => $domainName];
 		return $this->get($this->command.__FUNCTION__, array_merge($data, $mailBox, $forwardTo));
 	}
-
+	
 	/**
 	 * @todo Sets DNS host records settings for the requested domain.
 	 * @IMPORTANT:  We recommend you use HTTPPOST method when setting more than 10 hostnames. All host records that are not included into the API call will be deleted, so add them in addition to new host records.
@@ -103,8 +103,9 @@ class DomainsDns extends Api {
 	 * @NOTE: The [ ] brackets are used to represent optional values (e.g.[1...n]). Do not include the [ ] brackets in your API requests.
 	 */
 	public function setHosts($sld, $tld, array $hostName, array $recordType, array $address, array $mXPref, $emailType=null, array $ttl=[]) {
-		$data = ['SLD' => $sld, 'TLD' => $tld, 'EmailType' => $emailType];
-		return $this->post($this->command.__FUNCTION__, array_merge($data, $hostName, $recordType, $address, $mXPref, $ttl));
+		$data = ['SLD' => $sld, 'TLD' => $tld];
+		if($emailType) $data['EmailType'] = $emailType;
+		return $this->post($this->command.__FUNCTION__, array_merge($data, $hostName, $recordType, $address, $ttl));
 	}
 }
 

@@ -92,10 +92,16 @@ class Api {
 		}
 
 		$url = $this->endPoint;
-		$data['ApiUser']  = $this->apiUser;
-    	$data['ApiKey']   = $this->apiKey;
-    	$data['UserName'] = $this->userName;
-    	$data['ClientIp'] = $this->clientIp;
+		if($command=='namecheap.domains.dns.setHosts'){
+			$data['apiuser']  = $this->apiUser;
+			$data['apikey']   = $this->apiKey;
+			$data['username'] = $this->userName;
+		}else{
+			$data['ApiUser']  = $this->apiUser;
+			$data['ApiKey']   = $this->apiKey;
+			$data['UserName'] = $this->userName;
+		}
+		$data['ClientIp'] = $this->clientIp;
         $data['Command']  = $command;
 
 		//Removes null entries
@@ -119,7 +125,7 @@ class Api {
         curl_setopt_array($ch, $curl_options);
 
         if (strtolower($type) === 'get') {
-            $url .= '?'.http_build_query($data);
+			$url .= '?'.http_build_query($data);
         } else if (strtolower($type) === 'post') {
           	curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
